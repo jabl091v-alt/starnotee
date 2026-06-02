@@ -3,144 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StarNote 🌌</title>
+<title>StarNote Galaxy 🌌</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-/* 🌌 خلفية فضاء متحرك */
 body {
     margin: 0;
-    font-family: Arial;
-    color: white;
     overflow: hidden;
     background: black;
+    font-family: Arial;
+    color: white;
 }
 
-/* نجوم الخلفية */
-.stars-bg {
+/* 🌌 canvas الفضاء */
+canvas {
     position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* واجهة */
+.ui {
+    position: fixed;
+    top: 10px;
     width: 100%;
-    height: 100%;
-    background: transparent;
-    overflow: hidden;
-    z-index: -1;
-}
-
-.star-bg {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: white;
-    border-radius: 50%;
-    opacity: 0.6;
-    animation: moveStars linear infinite;
-}
-
-@keyframes moveStars {
-    from { transform: translateY(0); }
-    to { transform: translateY(100vh); }
-}
-
-/* 🌌 واجهة */
-.container {
     text-align: center;
-    margin-top: 20px;
 }
 
-/* ✨ بوكس زجاجي */
 textarea {
-    width: 80%;
-    height: 100px;
-    border-radius: 15px;
+    width: 60%;
+    height: 80px;
+    border-radius: 12px;
     border: none;
-    padding: 15px;
-    outline: none;
-    font-size: 16px;
+    padding: 10px;
     background: rgba(255,255,255,0.1);
     color: white;
     backdrop-filter: blur(10px);
 }
 
 button {
-    margin-top: 10px;
-    padding: 10px 25px;
+    padding: 10px 20px;
+    margin-top: 5px;
     border: none;
-    border-radius: 10px;
     background: gold;
-    font-weight: bold;
+    border-radius: 10px;
     cursor: pointer;
 }
 
-/* ⭐ نجوم الرسائل */
-.star {
-    position: absolute;
-    font-size: 24px;
-    cursor: pointer;
-    animation: floatStar 6s infinite ease-in-out;
-}
-
-@keyframes floatStar {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0); }
-}
-
-/* 💫 نافذة العرض */
+/* popup */
 .popup {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
+    display:none;
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.8);
 }
 
 .popup-content {
-    background: rgba(20,20,20,0.9);
-    padding: 20px;
-    width: 80%;
-    margin: 30% auto;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    background:#111;
+    padding:20px;
+    margin:20% auto;
+    width:80%;
+    border-radius:15px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="stars-bg" id="bg"></div>
+<canvas id="space"></canvas>
 
-<div class="container">
-    <h1>⭐ StarNote</h1>
-    <textarea id="note" placeholder="اكتب ملاحظتك..."></textarea><br>
+<div class="ui">
+    <h2>⭐ StarNote Galaxy</h2>
+    <textarea id="note"></textarea><br>
     <button onclick="saveNote()">إرسال</button>
 </div>
 
-<div id="stars"></div>
-
 <div id="popup" class="popup">
     <div class="popup-content">
-        <p id="popupText"></p>
-        <small id="popupTime"></small><br><br>
-        <button onclick="closePopup()">إغلاق</button>
+        <p id="ptext"></p>
+        <small id="ptime"></small><br><br>
+        <button onclick="closeP()">إغلاق</button>
     </div>
 </div>
 
 <script>
-// 🌌 خلفية نجوم متحركة
-for (let i = 0; i < 80; i++) {
-    let s = document.createElement("div");
-    s.className = "star-bg";
-    s.style.left = Math.random()*100 + "%";
-    s.style.top = Math.random()*100 + "%";
-    s.style.animationDuration = (5 + Math.random()*10) + "s";
-    document.getElementById("bg").appendChild(s);
-}
-
-// Firebase
+// 🌌 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -153,50 +103,104 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// حفظ
-function saveNote() {
+// 🌌 canvas setup
+const canvas = document.getElementById("space");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+let stars = [];
+
+// ⭐ نولد مجرة حقيقية (توزيع دائري + عمق وهمي)
+for(let i=0;i<200;i++){
+    stars.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        z: Math.random()*1 + 0.2, // عمق
+        vx: (Math.random()-0.5)*0.3,
+        vy: (Math.random()-0.5)*0.3
+    });
+}
+
+// 🎮 حركة المجرة
+function animate(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    for(let s of stars){
+        s.x += s.vx;
+        s.y += s.vy;
+
+        // لو خرجت ترجع من جهة ثانية (wrap effect)
+        if(s.x < 0) s.x = canvas.width;
+        if(s.x > canvas.width) s.x = 0;
+        if(s.y < 0) s.y = canvas.height;
+        if(s.y > canvas.height) s.y = 0;
+
+        let size = s.z * 3;
+
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, size, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    requestAnimationFrame(animate);
+}
+animate();
+
+// 💾 حفظ الرسالة
+function saveNote(){
     let text = document.getElementById("note").value;
-    if (!text) return;
+    if(!text) return;
 
     db.collection("notes").add({
-        text: text,
-        time: new Date().toLocaleString()
+        text:text,
+        time:new Date().toLocaleString()
     });
 
-    document.getElementById("note").value = "";
+    document.getElementById("note").value="";
 }
 
-// عرض النجوم بشكل عشوائي بالفضاء
+// 🌟 عرض النجوم ككواكب داخل المجرة
 db.collection("notes").orderBy("time","desc")
-.onSnapshot(snapshot => {
-    let box = document.getElementById("stars");
-    box.innerHTML = "";
+.onSnapshot(snap=>{
+    for(let i=0;i<stars.length;i++){
+        stars[i].note = null;
+    }
 
-    snapshot.forEach(doc => {
-        let data = doc.data();
-
-        let star = document.createElement("div");
-        star.className = "star";
-
-        star.style.left = Math.random()*90 + "%";
-        star.style.top = Math.random()*80 + "%";
-
-        star.innerHTML = "⭐";
-
-        star.onclick = () => openStar(data.text, data.time);
-
-        box.appendChild(star);
+    let i=0;
+    snap.forEach(doc=>{
+        if(i < stars.length){
+            stars[i].note = doc.data();
+            i++;
+        }
     });
 });
-    // popup
-function openStar(text, time){
-    document.getElementById("popup").style.display = "block";
-    document.getElementById("popupText").innerText = "⭐ " + text;
-    document.getElementById("popupTime").innerText = "📅 " + time;
+
+// 👆 ضغط على النجمة (تقريب لمس)
+canvas.addEventListener("click",(e)=>{
+    let mx = e.clientX;
+    let my = e.clientY;
+
+    for(let s of stars){
+        let dx = mx - s.x;
+        let dy = my - s.y;
+        if(Math.sqrt(dx*dx+dy*dy) < 10 && s.note){
+            open(s.note);
+        }
+    }
+});
+
+function open(note){
+    document.getElementById("popup").style.
+        display="block";
+    document.getElementById("ptext").innerText="⭐ "+note.text;
+    document.getElementById("ptime").innerText="📅 "+note.time;
 }
 
-function closePopup(){
-    document.getElementById("popup").style.display = "none";
+function closeP(){
+    document.getElementById("popup").style.display="none";
 }
 </script>
 
