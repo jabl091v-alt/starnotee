@@ -157,3 +157,4 @@ canvas.addEventListener("touchend",()=>drag=false);
 function closePopup(){
   document.getElementById("popup").style.display="none";
 }
+
