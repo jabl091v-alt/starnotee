@@ -1,4 +1,4 @@
-// 🔥 Firebase
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🌌 canvas
+// Canvas
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
@@ -22,45 +22,42 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ⭐ النجوم
-let stars = [];
+// ⭐ layers
+let notes = [];
 
-// 🧭 مركز المجرة
-let angle = 0;
+// 👁 كاميرا ناعمة
+let camX = 0;
+let camY = 0;
 
-// 🌊 رسم
+// 🌌 رسم فضاء واقعي
 function draw(){
-  ctx.fillStyle="black";
+  ctx.fillStyle = "black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   let cx = canvas.width/2;
   let cy = canvas.height/2;
 
-  angle += 0.0003; // دوران خفيف جداً
+  // كاميرا تتحرك شوي (parallax feel)
+  camX += (mouseX - camX) * 0.02;
+  camY += (mouseY - camY) * 0.02;
 
-  for(let s of stars){
+  for(let n of notes){
 
-    // 🌌 تحويل لمجرة + دوران بسيط
-    let rx = s.x * Math.cos(angle) - s.y * Math.sin(angle);
-    let ry = s.x * Math.sin(angle) + s.y * Math.cos(angle);
+    let depth = n.depth || 1;
 
-    let x = cx + rx * 0.25;
-    let y = cy + ry * 0.25;
+    let x = cx + (n.x - camX) * depth;
+    let y = cy + (n.y - camY) * depth;
 
-    // 🌊 طفو خفيف (هذا المهم اللي طلبته)
-    let floatX = Math.sin(Date.now()*0.001 + s.seed) * 0.6;
-    let floatY = Math.cos(Date.now()*0.001 + s.seed) * 0.6;
+    let size = 2 + depth * 3;
 
-    // ⭐ حجم ناعم
-    let size = 3.5;
+    // glow واقعي
+    ctx.shadowBlur = 25 * depth;
+    ctx.shadowColor = n.color || "#fff";
 
-    ctx.shadowBlur = 18;
-    ctx.shadowColor = s.color || "#fff";
-
-    ctx.fillStyle = s.color || "#fff";
+    ctx.fillStyle = n.color || "#fff";
 
     ctx.beginPath();
-    ctx.arc(x + floatX, y + floatY, size, 0, Math.PI*2);
+    ctx.arc(x,y,size,0,Math.PI*2);
     ctx.fill();
 
     ctx.shadowBlur = 0;
@@ -70,22 +67,31 @@ function draw(){
 }
 draw();
 
-// 💾 حفظ رسالة
+// 🖱 حركة خفيفة للكاميرا
+let mouseX = 0;
+let mouseY = 0;
+
+window.addEventListener("mousemove",(e)=>{
+  mouseX = (e.clientX - window.innerWidth/2) * 0.05;
+  mouseY = (e.clientY - window.innerHeight/2) * 0.05;
+});
+
+// 💾 حفظ
 function saveNote(){
   let text = document.getElementById("note").value;
   if(!text) return;
 
-  let colors = ["#fff","#ff8c00","#00f5ff","#ffd700","#a855f7","#ff4d6d"];
+  let colors = ["#ffffff","#ff8c00","#00f5ff","#ffd700","#a855f7"];
 
   db.collection("notes").add({
     text,
     color: colors[Math.floor(Math.random()*colors.length)],
     time: new Date().toLocaleString(),
 
-    x: (Math.random()-0.5)*2000,
-    y: (Math.random()-0.5)*2000,
+    x: (Math.random()-0.5)*3000,
+    y: (Math.random()-0.5)*3000,
 
-    seed: Math.random()*1000 // 🌊 مهم للطفو المختلف لكل نجمة
+    depth: Math.random()*0.8 + 0.2 // ⭐ عمق واقعي
   });
 
   document.getElementById("note").value="";
@@ -93,33 +99,27 @@ function saveNote(){
 
 // 📡 تحميل
 db.collection("notes").onSnapshot(snap=>{
-  stars=[];
-  snap.forEach(doc=>{
-    stars.push(doc.data());
+  notes=[];
+  snap.forEach(d=>{
+    notes.push(d.data());
   });
 });
 
-// 👆 فتح نجمة
+// 👆 فتح
 canvas.addEventListener("click",(e)=>{
-  let mx=e.clientX;
-  let my=e.clientY;
-
   let cx = canvas.width/2;
   let cy = canvas.height/2;
 
-  for(let s of stars){
+  for(let n of notes){
 
-    let rx = s.x;
-    let ry = s.y;
+    let x = cx + (n.x - camX) * (n.depth||1);
+    let y = cy + (n.y - camY) * (n.depth||1);
 
-    let x = cx + rx * 0.25;
-    let y = cy + ry * 0.25;
+    let dx = e.clientX - x;
+    let dy = e.clientY - y;
 
-    let dx = mx - x;
-    let dy = my - y;
-
-    if(Math.sqrt(dx*dx + dy*dy) < 12){
-      alert("⭐ "+s.text+"\n📅 "+s.time);
+    if(Math.sqrt(dx*dx+dy*dy) < 12){
+      alert("⭐ "+n.text+"\n📅 "+n.time);
     }
   }
 });
