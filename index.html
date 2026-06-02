@@ -12,7 +12,7 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: radial-gradient(circle at center, #000010, #000000);
+    background: radial-gradient(circle at center, #000015, #000000);
     font-family: Arial;
     color: white;
 }
@@ -23,7 +23,6 @@ canvas {
     left: 0;
 }
 
-/* UI */
 .ui {
     position: fixed;
     top: 15px;
@@ -38,7 +37,7 @@ textarea {
     border-radius: 12px;
     border: none;
     padding: 10px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.1);
     color: white;
 }
 
@@ -48,7 +47,6 @@ button {
     border: none;
     background: gold;
     border-radius: 10px;
-    cursor: pointer;
 }
 
 .popup {
@@ -101,21 +99,28 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🌌 canvas
+// canvas
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.onresize = resize;
 
-// 🎮 camera
+// camera
 let camera = {x:0,y:0,zoom:1};
+let drag=false,last={x:0,y:0};
 
-// ⭐ stars
+// ⭐ النجوم
 let stars = [];
 
-// 🎯 draw loop (IMPORTANT FIX)
+// 🎯 رسم مضمون
 function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
@@ -124,9 +129,12 @@ function draw(){
         let x = (s.x - camera.x) * camera.zoom + canvas.width/2;
         let y = (s.y - camera.y) * camera.zoom + canvas.height/2;
 
+        // فقط ارسم إذا داخل الشاشة (مهم جداً)
+        if(x < -50  x > canvas.width+50  y < -50 || y > canvas.height+50) continue;
+
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.arc(x, y, 3 * camera.zoom, 0, Math.PI*2);
+        ctx.arc(x, y, 4, 0, Math.PI*2);
         ctx.fill();
     }
 
@@ -134,7 +142,7 @@ function draw(){
 }
 draw();
 
-// 💾 save
+// 💾 حفظ
 function saveNote(){
     let text = document.getElementById("note").value;
     if(!text) return;
@@ -142,14 +150,14 @@ function saveNote(){
     db.collection("notes").add({
         text:text,
         time:new Date().toLocaleString(),
-        x: Math.random()*2000 - 1000,
-        y: Math.random()*2000 - 1000
+        x:(Math.random()-0.5)*2000,
+        y:(Math.random()-0.5)*2000
     });
 
     document.getElementById("note").value="";
 }
 
-// 🌟 load
+// 🌟 تحميل
 db.collection("notes").onSnapshot(snap=>{
     stars = [];
     snap.forEach(doc=>{
@@ -182,12 +190,11 @@ canvas.addEventListener("wheel",(e)=>{
 });
 
 // 🧭 drag
-let drag=false,last={x:0,y:0};
-
 canvas.addEventListener("mousedown",(e)=>{
     drag=true;
     last.x=e.clientX;
-    last.y=e.clientY;
+    last.y=e.
+        clientY;
 });
 
 canvas.addEventListener("mouseup",()=>drag=false);
@@ -196,6 +203,7 @@ canvas.addEventListener("mousemove",(e)=>{
     if(drag){
         let dx=e.clientX-last.x;
         let dy=e.clientY-last.y;
+
         camera.x -= dx / camera.zoom;
         camera.y -= dy / camera.zoom;
 
