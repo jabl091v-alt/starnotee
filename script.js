@@ -15,25 +15,22 @@ const db = firebase.firestore();
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
 window.onresize = () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
 };
 
 // ⭐ النجوم (ذكريات)
 let notes = [];
 
-// 🎯 camera (حركة داخل الفضاء فقط)
+// 🎯 كاميرا
 let camX = 0;
 let camY = 0;
-let dragging = false;
-let lastX = 0;
-let lastY = 0;
 
-// 🎨 رسم ثابت (بدون animation معقدة)
+// 🌌 رسم مجرة مرتبة (spiral galaxy feel)
 function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -41,12 +38,21 @@ function draw(){
   let cx = canvas.width/2;
   let cy = canvas.height/2;
 
-  for(let n of notes){
+  for(let i=0;i<notes.length;i++){
 
-    let x = cx + (n.x - camX);
-    let y = cy + (n.y - camY);
+    let n = notes[i];
 
-    let size = n.size || 3;
+    // 🌌 ترتيب مجرة spiral خفيف
+    let angle = i * 0.5;
+    let radius = Math.sqrt(i) * 30;
+
+    let gx = Math.cos(angle) * radius + n.x;
+    let gy = Math.sin(angle) * radius + n.y;
+
+    let x = cx + (gx - camX);
+    let y = cy + (gy - camY);
+
+    let size = (n.size || 3);
 
     ctx.shadowBlur = 15;
     ctx.shadowColor = n.color;
@@ -58,9 +64,14 @@ function draw(){
     ctx.fill();
 
     ctx.shadowBlur = 0;
+
+    // ❤️ عدد اللايكات يظهر صغير
+    ctx.fillStyle = "white";
+    ctx.font = "10px Arial";
+    ctx.fillText("❤️"+(n.likes||0), x+6, y-6);
   }
 }
-setInterval(draw, 16);
+setInterval(draw,16);
 
 // 💾 حفظ ذكرى
 function saveNote(){
@@ -74,25 +85,27 @@ function saveNote(){
     text,
     color: colors[Math.floor(Math.random()*colors.length)],
     time: new Date().toLocaleString(),
-
-    x: (Math.random()-0.5)*3000,
-    y: (Math.random()-0.5)*3000,
-
-    size: Math.random()*4 + 2
+    x: (Math.random()-0.5)*2000,
+    y: (Math.random()-0.5)*2000,
+    size: Math.random()*4 + 2,
+    likes: 0
   });
 
   document.getElementById("note").value="";
 }
 
-// 🌍 كل الناس يشوفون نفس الذكريات
+// 🌍 تحميل البيانات
 db.collection("memories").onSnapshot(snap=>{
   notes=[];
   snap.forEach(d=>{
-    notes.push(d.data());
+    notes.push({
+      id: d.id,
+      ...d.data()
+    });
   });
 });
 
-// 👆 فتح نجمة
+// 👆 فتح ذكرى
 canvas.addEventListener("click",(e)=>{
 
   let cx = canvas.width/2;
@@ -100,8 +113,14 @@ canvas.addEventListener("click",(e)=>{
 
   for(let n of notes){
 
-    let x = cx + (n.x - camX);
-    let y = cy + (n.y - camY);
+    let angle = notes.indexOf(n) * 0.5;
+    let radius = Math.sqrt(notes.indexOf(n)) * 30;
+
+    let gx = Math.cos(angle) * radius + n.x;
+    let gy = Math.sin(angle) * radius + n.y;
+
+    let x = cx + (gx - camX);
+    let y = cy + (gy - camY);
 
     let dx = e.clientX - x;
     let dy = e.clientY - y;
@@ -112,16 +131,37 @@ canvas.addEventListener("click",(e)=>{
       document.getElementById("txt").innerText = "⭐ " + n.text;
       document.getElementById("time").innerText = "📅 " + n.time;
 
+      // 🧡 زر لايك داخل popup
+      window.currentId = n.id;
+
       return;
     }
   }
 });
 
-// 🧭 حركة داخل الفضاء (سحب فقط)
+// ❤️ نظام لايك
+function likeMemory(){
+
+  if(!window.currentId) return;
+
+  let ref = db.collection("memories").doc(window.currentId);
+
+  ref.get().then(doc=>{
+    let likes = doc.data().likes || 0;
+
+    ref.update({
+      likes: likes + 1
+    });
+  });
+}
+
+// 🧭 حركة الفضاء
+let dragging=false,lastX=0,lastY=0;
+
 canvas.addEventListener("mousedown",(e)=>{
-  dragging = true;
-  lastX = e.clientX;
-  lastY = e.clientY;
+  dragging=true;
+  lastX=e.clientX;
+  lastY=e.clientY;
 });
 
 canvas.addEventListener("mousemove",(e)=>{
@@ -130,18 +170,17 @@ canvas.addEventListener("mousemove",(e)=>{
   camX += lastX - e.clientX;
   camY += lastY - e.clientY;
 
-  lastX = e.clientX;
-  lastY = e.clientY;
+  lastX=e.clientX;
+  lastY=e.clientY;
 });
 
 canvas.addEventListener("mouseup",()=>dragging=false);
-canvas.addEventListener("mouseleave",()=>dragging=false);
 
 // 📱 touch
 canvas.addEventListener("touchstart",(e)=>{
-  dragging = true;
-  lastX = e.touches[0].clientX;
-  lastY = e.touches[0].clientY;
+  dragging=true;
+  lastX=e.touches[0].clientX;
+  lastY=e.touches[0].clientY;
 });
 
 canvas.addEventListener("touchmove",(e)=>{
@@ -150,13 +189,15 @@ canvas.addEventListener("touchmove",(e)=>{
   camX += lastX - e.touches[0].clientX;
   camY += lastY - e.touches[0].clientY;
 
-  lastX = e.touches[0].clientX;
-  lastY = e.touches[0].clientY;
+  lastX=e.touches[0].clientX;
+  lastY=e.touches[0].clientY;
 });
 
 canvas.addEventListener("touchend",()=>dragging=false);
 
 // 🔒 popup
 function closePopup(){
-  document.getElementById("popup").style.display="none";
+  document.
+    getElementById("popup").style.display="none";
+  window.currentId=null;
 }
