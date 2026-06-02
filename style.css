@@ -1,37 +1,62 @@
-body {
-    margin: 0;
-    font-family: Arial;
-    background: black;
-    color: white;
-    text-align: center;
+body{
+  margin:0;
+  overflow:hidden;
+  background:black;
+  font-family:Arial;
 }
 
-h1 {
-    margin-top: 40px;
-    color: gold;
+/* الفضاء */
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
 }
 
-textarea {
-    width: 80%;
-    height: 120px;
-    margin-top: 20px;
-    border-radius: 10px;
-    padding: 10px;
-    border: none;
+/* واجهة */
+.ui{
+  position:fixed;
+  top:20px;
+  width:100%;
+  text-align:center;
+  z-index:10;
 }
 
-button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    border: none;
-    background: gold;
-    color: black;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
+/* بوكس الرسالة */
+textarea{
+  width:260px;
+  height:45px;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);
+  color:white;
+  outline:none;
 }
 
-#output {
-    margin-top: 20px;
-    font-size: 18px;
+/* زر */
+button{
+  margin-top:5px;
+  padding:8px 16px;
+  border:none;
+  border-radius:10px;
+  background:gold;
+  cursor:pointer;
+}
+
+/* popup */
+.popup{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.85);
+}
+
+.popup-content{
+  background:#111;
+  padding:20px;
+  margin:20% auto;
+  width:80%;
+  border-radius:12px;
+  color:white;
 }
