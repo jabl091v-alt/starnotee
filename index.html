@@ -16,22 +16,22 @@ body {
     background: radial-gradient(circle at top, #000010, #000000);
     color: white;
     text-align: center;
+    overflow: hidden;
 }
 
 h1 {
-    margin-top: 30px;
+    margin-top: 20px;
     color: gold;
     text-shadow: 0 0 10px gold;
 }
 
 textarea {
     width: 80%;
-    height: 120px;
-    margin-top: 20px;
+    height: 100px;
+    margin-top: 10px;
     border-radius: 10px;
     padding: 10px;
     border: none;
-    outline: none;
 }
 
 button {
@@ -45,15 +45,42 @@ button {
     cursor: pointer;
 }
 
-#notes {
-    margin-top: 30px;
-    padding: 10px;
+/* 🌟 النجوم */
+.star {
+    display: inline-block;
+    font-size: 28px;
+    margin: 10px;
+    cursor: pointer;
+    animation: float 6s infinite ease-in-out;
+    transition: transform 0.3s;
 }
 
-.note {
-    background: rgba(255,255,255,0.1);
-    margin: 10px auto;
-    padding: 10px;
+.star:hover {
+    transform: scale(1.4);
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+/* 🌌 popup */
+.popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+}
+
+.popup-content {
+    background: #111;
+    color: white;
+    padding: 20px;
+    margin: 25% auto;
     width: 80%;
     border-radius: 10px;
 }
@@ -63,15 +90,25 @@ button {
 <body>
 
 <h1>⭐ StarNote</h1>
-<p>اكتب رسالة وخليها بالفضاء 🚀</p>
+<p>اكتب رسالة وخليها نجمة بالفضاء 🌌</p>
 
-<textarea id="note" placeholder="اكتب هنا..."></textarea><br>
-<button onclick="saveNote()">حفظ</button>
+<textarea id="note"></textarea><br>
+<button onclick="saveNote()">إرسال</button>
 
-<div id="notes"></div>
+<div id="stars"></div>
+
+<!-- Popup -->
+<div id="popup" class="popup">
+    <div class="popup-content">
+        <p id="popupText"></p>
+        <small id="popupTime"></small>
+        <br><br>
+        <button onclick="closePopup()">إغلاق</button>
+    </div>
+</div>
 
 <script>
-// Firebase config
+// 🔥 Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -81,40 +118,52 @@ const firebaseConfig = {
   appId: "1:701812553416:web:328c463b159a5d788617fd"
 };
 
-// Init Firebase
+// init
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// حفظ ملاحظة
+// 💾 حفظ الرسالة
 function saveNote() {
     let text = document.getElementById("note").value;
 
-    if (text === "") {
-        alert("اكتب شي أولاً!");
-        return;
-    }
+    if (text === "") return alert("اكتب رسالة!");
 
     db.collection("notes").add({
         text: text,
-        time: new Date()
+        time: new Date().toLocaleString()
     });
 
     document.getElementById("note").value = "";
 }
 
-// عرض الملاحظات مباشرة
+// 🌌 عرض النجوم
 db.collection("notes").orderBy("time", "desc")
 .onSnapshot(snapshot => {
-    let notesDiv = document.getElementById("notes");
-    notesDiv.innerHTML = "";
+    let box = document.getElementById("stars");
+    box.innerHTML = "";
 
     snapshot.forEach(doc => {
         let data = doc.data();
-        notesDiv.innerHTML += `
-            <div class="note">🌟 ${data.text}</div>
+
+        box.innerHTML += `
+            <div class="star" onclick="openStar('${data.text}','${data.time}')">
+                ⭐
+            </div>
         `;
     });
 });
+
+// 👆 فتح النجمة
+function openStar(text, time) {
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("popupText").innerText = "⭐ " + text;
+    document.getElementById("popupTime").innerText = "📅 " + time;
+}
+
+// ❌ إغلاق
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
 </script>
 
 </body>
