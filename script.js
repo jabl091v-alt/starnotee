@@ -15,17 +15,18 @@ const db = firebase.firestore();
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
-function resize(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+window.onresize = () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
+};
 
-// ⭐ البيانات
+// ⭐ النجوم
 let notes = [];
 
-// 🌌 رسم
+// 🎨 رسم
 function draw(){
   ctx.fillStyle="black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -38,7 +39,7 @@ function draw(){
     let x = cx + (n.x || 0);
     let y = cy + (n.y || 0);
 
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 20;
     ctx.shadowColor = n.color || "#fff";
     ctx.fillStyle = n.color || "#fff";
 
@@ -53,12 +54,12 @@ function draw(){
 }
 draw();
 
-// 💾 حفظ
+// 💾 حفظ رسالة
 function saveNote(){
   let text = document.getElementById("note").value;
   if(!text) return;
 
-  let colors = ["#fff","#ff8c00","#00f5ff","#ffd700","#a855f7","#ff4d6d"];
+  let colors = ["#fff","#ff8c00","#00f5ff","#ffd700","#a855f7"];
 
   db.collection("notes").add({
     text,
@@ -79,20 +80,13 @@ db.collection("notes").onSnapshot(snap=>{
   });
 });
 
-// 🟢 دالة لمس موحدة (موبايل + كمبيوتر)
-function getPos(e){
+// 👆 فتح نجمة (مضمون)
+canvas.addEventListener("click",(e)=>{
+
   let rect = canvas.getBoundingClientRect();
 
-  let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-  let y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
-  return {x,y};
-}
-
-// 👆 فتح نجمة (مضمون للموبايل)
-function checkClick(e){
-
-  let pos = getPos(e);
+  let mx = e.clientX - rect.left;
+  let my = e.clientY - rect.top;
 
   let cx = canvas.width/2;
   let cy = canvas.height/2;
@@ -102,22 +96,21 @@ function checkClick(e){
     let x = cx + (n.x || 0);
     let y = cy + (n.y || 0);
 
-    let dx = pos.x - x;
-    let dy = pos.y - y;
+    let dx = mx - x;
+    let dy = my - y;
 
-    if(Math.sqrt(dx*dx + dy*dy) < 14){
+    if(Math.sqrt(dx*dx + dy*dy) < 12){
 
-      alert("⭐ " + n.text + "\n📅 " + n.time);
+      document.getElementById("popup").style.display="block";
+      document.getElementById("txt").innerText = "⭐ " + n.text;
+      document.getElementById("time").innerText = "📅 " + n.time;
+
       return;
     }
   }
+});
+
+// إغلاق
+function closePopup(){
+  document.getElementById("popup").style.display="none";
 }
-
-// 🖱 كمبيوتر
-canvas.addEventListener("click",checkClick);
-
-// 📱 موبايل
-canvas.addEventListener("touchstart",function(e){
-  e.preventDefault();
-  checkClick(e);
-},{passive:false});
