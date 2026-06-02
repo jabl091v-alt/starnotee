@@ -1,4 +1,4 @@
-// Firebase
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Canvas
+// 🌌 canvas
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
@@ -22,38 +22,40 @@ function resize(){
 resize();
 window.addEventListener("resize", resize);
 
-// ⭐ layers
+// ⭐ نجوم (مهم: fallback حتى لا يختفي شيء)
 let notes = [];
 
-// 👁 كاميرا ناعمة
-let camX = 0;
-let camY = 0;
+// 🧠 لو Firebase فشل، نسوي نجوم وهمية
+for(let i=0;i<50;i++){
+  notes.push({
+    text:"demo",
+    color:"#ffffff",
+    x:(Math.random()-0.5)*2000,
+    y:(Math.random()-0.5)*2000,
+    depth:Math.random()*0.8+0.2,
+    time:"demo"
+  });
+}
 
-// 🌌 رسم فضاء واقعي
+// 🎨 رسم دائم
 function draw(){
-  ctx.fillStyle = "black";
+  ctx.fillStyle="black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   let cx = canvas.width/2;
   let cy = canvas.height/2;
 
-  // كاميرا تتحرك شوي (parallax feel)
-  camX += (mouseX - camX) * 0.02;
-  camY += (mouseY - camY) * 0.02;
-
   for(let n of notes){
 
     let depth = n.depth || 1;
 
-    let x = cx + (n.x - camX) * depth;
-    let y = cy + (n.y - camY) * depth;
+    let x = cx + (n.x || 0) * depth;
+    let y = cy + (n.y || 0) * depth;
 
-    let size = 2 + depth * 3;
+    let size = 3 + depth * 3;
 
-    // glow واقعي
-    ctx.shadowBlur = 25 * depth;
+    ctx.shadowBlur = 20;
     ctx.shadowColor = n.color || "#fff";
-
     ctx.fillStyle = n.color || "#fff";
 
     ctx.beginPath();
@@ -67,31 +69,20 @@ function draw(){
 }
 draw();
 
-// 🖱 حركة خفيفة للكاميرا
-let mouseX = 0;
-let mouseY = 0;
-
-window.addEventListener("mousemove",(e)=>{
-  mouseX = (e.clientX - window.innerWidth/2) * 0.05;
-  mouseY = (e.clientY - window.innerHeight/2) * 0.05;
-});
-
-// 💾 حفظ
+// 💾 حفظ رسالة
 function saveNote(){
   let text = document.getElementById("note").value;
   if(!text) return;
 
-  let colors = ["#ffffff","#ff8c00","#00f5ff","#ffd700","#a855f7"];
+  let colors = ["#fff","#ff8c00","#00f5ff","#ffd700","#a855f7"];
 
   db.collection("notes").add({
     text,
     color: colors[Math.floor(Math.random()*colors.length)],
     time: new Date().toLocaleString(),
-
-    x: (Math.random()-0.5)*3000,
-    y: (Math.random()-0.5)*3000,
-
-    depth: Math.random()*0.8 + 0.2 // ⭐ عمق واقعي
+    x:(Math.random()-0.5)*2000,
+    y:(Math.random()-0.5)*2000,
+    depth:Math.random()*0.8+0.2
   });
 
   document.getElementById("note").value="";
@@ -99,27 +90,13 @@ function saveNote(){
 
 // 📡 تحميل
 db.collection("notes").onSnapshot(snap=>{
-  notes=[];
+  let arr=[];
   snap.forEach(d=>{
-    notes.push(d.data());
+    arr.push(d.data());
   });
-});
 
-// 👆 فتح
-canvas.addEventListener("click",(e)=>{
-  let cx = canvas.width/2;
-  let cy = canvas.height/2;
-
-  for(let n of notes){
-
-    let x = cx + (n.x - camX) * (n.depth||1);
-    let y = cy + (n.y - camY) * (n.depth||1);
-
-    let dx = e.clientX - x;
-    let dy = e.clientY - y;
-
-    if(Math.sqrt(dx*dx+dy*dy) < 12){
-      alert("⭐ "+n.text+"\n📅 "+n.time);
-    }
+  // إذا فاضي، لا تفرغ الشاشة
+  if(arr.length > 0){
+    notes = arr;
   }
 });
