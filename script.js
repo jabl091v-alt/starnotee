@@ -1,3 +1,4 @@
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -10,18 +11,21 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🌌 canvas
+// 🌌 Canvas
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
+// ✔ مهم للموبايل (يمنع التزحلق)
+document.body.style.overflow = "hidden";
+
 function resize(){
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
 resize();
 window.addEventListener("resize", resize);
 
-// ⭐ رسائل
+// ⭐ الرسائل
 let stars = [];
 
 // 🧭 حركة الفضاء
@@ -37,10 +41,11 @@ function draw(){
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   for(let s of stars){
+
     let x = s.x + offsetX;
     let y = s.y + offsetY;
 
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 18;
     ctx.shadowColor = s.color;
 
     ctx.fillStyle = s.color;
@@ -76,7 +81,7 @@ function saveNote(){
   document.getElementById("note").value="";
 }
 
-// 📡 تحميل الرسائل (مهم جداً)
+// 📡 تحميل
 db.collection("notes").onSnapshot(snap=>{
   stars=[];
   snap.forEach(doc=>{
@@ -103,7 +108,7 @@ canvas.addEventListener("click",(e)=>{
 });
 
 
-// 🟢 دعم الماوس + اللمس (IMPORTANT)
+// 🟢 دعم الماوس + اللمس (مستقر للموبايل)
 function startDrag(x,y){
   isDragging=true;
   lastX=x;
@@ -113,11 +118,8 @@ function startDrag(x,y){
 function moveDrag(x,y){
   if(!isDragging) return;
 
-  let dx=x-lastX;
-  let dy=y-lastY;
-
-  offsetX+=dx;
-  offsetY+=dy;
+  offsetX += x-lastX;
+  offsetY += y-lastY;
 
   lastX=x;
   lastY=y;
@@ -133,15 +135,15 @@ canvas.addEventListener("mousemove",(e)=>moveDrag(e.clientX,e.clientY));
 canvas.addEventListener("mouseup",endDrag);
 canvas.addEventListener("mouseleave",endDrag);
 
-// 📱 touch (هذا المهم للموبايل)
+// 📱 touch (مهم جداً)
 canvas.addEventListener("touchstart",(e)=>{
   let t=e.touches[0];
   startDrag(t.clientX,t.clientY);
-});
+},{passive:true});
 
 canvas.addEventListener("touchmove",(e)=>{
   let t=e.touches[0];
   moveDrag(t.clientX,t.clientY);
-});
+},{passive:true});
 
 canvas.addEventListener("touchend",endDrag);
