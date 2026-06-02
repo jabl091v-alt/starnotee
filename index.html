@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StarNote Galaxy Pro 🌌</title>
+<title>StarNote 🌌</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -17,7 +17,6 @@ body {
     color: white;
 }
 
-/* canvas */
 canvas {
     position: fixed;
     top: 0;
@@ -41,7 +40,6 @@ textarea {
     padding: 10px;
     background: rgba(255,255,255,0.08);
     color: white;
-    backdrop-filter: blur(8px);
 }
 
 button {
@@ -53,7 +51,6 @@ button {
     cursor: pointer;
 }
 
-/* popup */
 .popup {
     display:none;
     position:fixed;
@@ -77,8 +74,8 @@ button {
 <canvas id="space"></canvas>
 
 <div class="ui">
-    <h2>⭐ StarNote Galaxy Pro</h2>
-    <textarea id="note" placeholder="اكتب رسالتك..."></textarea><br>
+    <h2>⭐ StarNote</h2>
+    <textarea id="note"></textarea><br>
     <button onclick="saveNote()">إرسال</button>
 </div>
 
@@ -111,33 +108,21 @@ const ctx = canvas.getContext("2d");
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
-// 🎮 camera (Zoom + Drag)
-let camera = {
-    x: 0,
-    y: 0,
-    zoom: 1
-};
+// 🎮 camera
+let camera = {x:0,y:0,zoom:1};
 
-let dragging = false;
-let last = {x:0,y:0};
-
-// ⭐ stars (messages)
+// ⭐ stars
 let stars = [];
 
-// 🌌 draw loop
+// 🎯 draw loop (IMPORTANT FIX)
 function draw(){
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     for(let s of stars){
 
-        // تحويل حسب الكاميرا
         let x = (s.x - camera.x) * camera.zoom + canvas.width/2;
         let y = (s.y - camera.y) * camera.zoom + canvas.height/2;
-
-        // حركة خفيفة طبيعية
-        s.x += s.vx;
-        s.y += s.vy;
 
         ctx.fillStyle = "white";
         ctx.beginPath();
@@ -149,7 +134,7 @@ function draw(){
 }
 draw();
 
-// 💾 حفظ
+// 💾 save
 function saveNote(){
     let text = document.getElementById("note").value;
     if(!text) return;
@@ -157,8 +142,8 @@ function saveNote(){
     db.collection("notes").add({
         text:text,
         time:new Date().toLocaleString(),
-        x: Math.random()*1000,
-        y: Math.random()*1000
+        x: Math.random()*2000 - 1000,
+        y: Math.random()*2000 - 1000
     });
 
     document.getElementById("note").value="";
@@ -172,7 +157,7 @@ db.collection("notes").onSnapshot(snap=>{
     });
 });
 
-// 👆 click stars
+// 👆 click
 canvas.addEventListener("click",(e)=>{
     let mx = e.clientX;
     let my = e.clientY;
@@ -190,31 +175,32 @@ canvas.addEventListener("click",(e)=>{
     }
 });
 
-// 🔍 Zoom
+// 🔍 zoom
 canvas.addEventListener("wheel",(e)=>{
     camera.zoom += e.deltaY * -0.001;
     camera.zoom = Math.min(Math.max(0.5, camera.zoom), 3);
 });
 
-// 🧭 Drag
+// 🧭 drag
+let drag=false,last={x:0,y:0};
+
 canvas.addEventListener("mousedown",(e)=>{
-    dragging = true;
-    last.x = e.clientX;
-    last.y = e.clientY;
+    drag=true;
+    last.x=e.clientX;
+    last.y=e.clientY;
 });
 
-canvas.addEventListener("mouseup",()=>dragging=false);
+canvas.addEventListener("mouseup",()=>drag=false);
 
 canvas.addEventListener("mousemove",(e)=>{
-    if(dragging){
-        let dx = e.clientX - last.x;
-        let dy = e.clientY - last.y;
-
+    if(drag){
+        let dx=e.clientX-last.x;
+        let dy=e.clientY-last.y;
         camera.x -= dx / camera.zoom;
         camera.y -= dy / camera.zoom;
 
-        last.x = e.clientX;
-        last.y = e.clientY;
+        last.x=e.clientX;
+        last.y=e.clientY;
     }
 });
 
