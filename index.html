@@ -3,63 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StarNote Galaxy 🌌</title>
+<title>StarNote 🌌</title>
 
-<style>
-body{
-  margin:0;
-  overflow:hidden;
-  background:black;
-  font-family:Arial;
-}
-
-/* 🎨 canvas الفضاء */
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-}
-
-/* ✨ واجهة أنيقة */
-.ui{
-  position:fixed;
-  top:15px;
-  width:100%;
-  text-align:center;
-  z-index:10;
-}
-
-/* 💎 بوكس صغير شفاف */
-textarea{
-  width:280px;
-  height:50px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,0.2);
-  background:rgba(255,255,255,0.08);
-  color:white;
-  backdrop-filter: blur(10px);
-  outline:none;
-  font-size:14px;
-  transition:0.3s;
-}
-
-textarea:focus{
-  border:1px solid gold;
-  box-shadow:0 0 10px rgba(255,215,0,0.3);
-}
-
-/* زر */
-button{
-  margin-top:5px;
-  padding:8px 16px;
-  border:none;
-  border-radius:10px;
-  background:gold;
-  cursor:pointer;
-  font-weight:bold;
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -67,66 +13,23 @@ button{
 <canvas id="space"></canvas>
 
 <div class="ui">
-  <textarea placeholder="اكتب رسالتك في الفضاء..."></textarea><br>
-  <button>إرسال</button>
+  <textarea id="note" placeholder="اكتب رسالتك في الفضاء..."></textarea>
+  <button onclick="saveNote()">إرسال</button>
 </div>
 
-<script>
-const canvas = document.getElementById("space");
-const ctx = canvas.getContext("2d");
+<div id="popup" class="popup">
+  <div class="popup-content">
+    <p id="txt"></p>
+    <small id="time"></small><br><br>
+    <button onclick="closePopup()">إغلاق</button>
+  </div>
+</div>
 
-function resize(){
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-}
-resize();
-window.onresize = resize;
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-/* ⭐ نجوم 3D وهمية */
-let stars = [];
-
-for(let i=0;i<300;i++){
-  stars.push({
-    x: (Math.random()-0.5)*canvas.width,
-    y: (Math.random()-0.5)*canvas.height,
-    z: Math.random()*canvas.width
-  });
-}
-
-/* 🔥 حركة 3D */
-function draw(){
-  ctx.fillStyle="black";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  let cx = canvas.width/2;
-  let cy = canvas.height/2;
-
-  for(let s of stars){
-
-    s.z -= 2;
-    if(s.z <= 0){
-      s.z = canvas.width;
-      s.x = (Math.random()-0.5)*canvas.width;
-      s.y = (Math.random()-0.5)*canvas.height;
-    }
-
-    let k = 200 / s.z;
-
-    let x = s.x * k + cx;
-    let y = s.y * k + cy;
-
-    let size = (1 - s.z/canvas.width) * 3;
-
-    ctx.fillStyle="white";
-    ctx.beginPath();
-    ctx.arc(x,y,size,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  requestAnimationFrame(draw);
-}
-draw();
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
