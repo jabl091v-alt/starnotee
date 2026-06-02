@@ -1,4 +1,3 @@
-// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -11,7 +10,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🌌 Canvas
+// 🌌 canvas
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
@@ -20,12 +19,12 @@ function resize(){
   canvas.height = innerHeight;
 }
 resize();
-window.onresize = resize;
+window.addEventListener("resize", resize);
 
-// ⭐ الرسائل
+// ⭐ رسائل
 let stars = [];
 
-// 🧭 Pan (سحب الفضاء)
+// 🧭 حركة الفضاء
 let offsetX = 0;
 let offsetY = 0;
 let isDragging = false;
@@ -38,7 +37,6 @@ function draw(){
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   for(let s of stars){
-
     let x = s.x + offsetX;
     let y = s.y + offsetY;
 
@@ -63,29 +61,22 @@ function saveNote(){
   let text = document.getElementById("note").value;
   if(!text) return;
 
-  let colors = [
-    "#ffffff",
-    "#ff8c00",
-    "#00f5ff",
-    "#ffd700",
-    "#a855f7",
-    "#ff4d6d"
-  ];
+  let colors = ["#ffffff","#ff8c00","#00f5ff","#ffd700","#a855f7","#ff4d6d"];
 
   let color = colors[Math.floor(Math.random()*colors.length)];
 
   db.collection("notes").add({
-    text:text,
-    color:color,
+    text,
+    color,
     time:new Date().toLocaleString(),
-    x:Math.random()*2000 - 1000,
-    y:Math.random()*2000 - 1000
+    x:Math.random()*2000-1000,
+    y:Math.random()*2000-1000
   });
 
   document.getElementById("note").value="";
 }
 
-// 📡 تحميل
+// 📡 تحميل الرسائل (مهم جداً)
 db.collection("notes").onSnapshot(snap=>{
   stars=[];
   snap.forEach(doc=>{
@@ -93,7 +84,7 @@ db.collection("notes").onSnapshot(snap=>{
   });
 });
 
-// 👆 فتح نجمة
+// 👆 فتح رسالة
 canvas.addEventListener("click",(e)=>{
   let mx=e.clientX;
   let my=e.clientY;
@@ -106,43 +97,51 @@ canvas.addEventListener("click",(e)=>{
     let dy=my-y;
 
     if(Math.sqrt(dx*dx+dy*dy)<10){
-      openPopup(s);
+      alert("⭐ "+s.text+"\n📅 "+s.time);
     }
   }
 });
 
-// 🟢 Drag start
-canvas.addEventListener("mousedown",(e)=>{
-  isDragging=true;
-  lastX=e.clientX;
-  lastY=e.clientY;
-});
 
-// 🟢 Drag move
-canvas.addEventListener("mousemove",(e)=>{
+// 🟢 دعم الماوس + اللمس (IMPORTANT)
+function startDrag(x,y){
+  isDragging=true;
+  lastX=x;
+  lastY=y;
+}
+
+function moveDrag(x,y){
   if(!isDragging) return;
 
-  let dx=e.clientX-lastX;
-  let dy=e.clientY-lastY;
+  let dx=x-lastX;
+  let dy=y-lastY;
 
   offsetX+=dx;
   offsetY+=dy;
 
-  lastX=e.clientX;
-  lastY=e.clientY;
+  lastX=x;
+  lastY=y;
+}
+
+function endDrag(){
+  isDragging=false;
+}
+
+// 🖱️ mouse
+canvas.addEventListener("mousedown",(e)=>startDrag(e.clientX,e.clientY));
+canvas.addEventListener("mousemove",(e)=>moveDrag(e.clientX,e.clientY));
+canvas.addEventListener("mouseup",endDrag);
+canvas.addEventListener("mouseleave",endDrag);
+
+// 📱 touch (هذا المهم للموبايل)
+canvas.addEventListener("touchstart",(e)=>{
+  let t=e.touches[0];
+  startDrag(t.clientX,t.clientY);
 });
 
-// 🟢 Drag end
-canvas.addEventListener("mouseup",()=>isDragging=false);
-canvas.addEventListener("mouseleave",()=>isDragging=false);
+canvas.addEventListener("touchmove",(e)=>{
+  let t=e.touches[0];
+  moveDrag(t.clientX,t.clientY);
+});
 
-// 👇 popup
-function openPopup(s){
-  document.getElementById("popup").style.display="block";
-  document.getElementById("txt").innerText="⭐ "+s.text;
-  document.getElementById("time").innerText="📅 "+s.time;
-}
-
-function closePopup(){
-  document.getElementById("popup").style.display="none";
-}
+canvas.addEventListener("touchend",endDrag);
