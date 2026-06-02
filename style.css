@@ -12,7 +12,7 @@ canvas{
   left:0;
 }
 
-/* واجهة */
+/* الواجهة */
 .ui{
   position:fixed;
   top:20px;
@@ -24,7 +24,7 @@ canvas{
 /* بوكس الرسالة */
 textarea{
   width:260px;
-  height:45px;
+  height:50px;
   padding:10px;
   border-radius:12px;
   border:1px solid rgba(255,255,255,0.2);
@@ -41,6 +41,7 @@ button{
   border-radius:10px;
   background:gold;
   cursor:pointer;
+  font-weight:bold;
 }
 
 /* popup */
