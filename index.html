@@ -3,24 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StarNote</title>
-<link rel="stylesheet" href="style.css">
+<title>StarNote 🌌</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: radial-gradient(circle at top, #000010, #000000);
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    margin-top: 30px;
+    color: gold;
+    text-shadow: 0 0 10px gold;
+}
+
+textarea {
+    width: 80%;
+    height: 120px;
+    margin-top: 20px;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    outline: none;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    background: gold;
+    color: black;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#notes {
+    margin-top: 30px;
+    padding: 10px;
+}
+
+.note {
+    background: rgba(255,255,255,0.1);
+    margin: 10px auto;
+    padding: 10px;
+    width: 80%;
+    border-radius: 10px;
+}
+</style>
 </head>
 
 <body>
 
 <h1>⭐ StarNote</h1>
-<p>اكتب ملاحظتك وخليها بالفضاء 🚀</p>
+<p>اكتب رسالة وخليها بالفضاء 🚀</p>
 
-<textarea id="note" placeholder="اكتب هنا..."></textarea>
-
-<br>
-
+<textarea id="note" placeholder="اكتب هنا..."></textarea><br>
 <button onclick="saveNote()">حفظ</button>
 
-<div id="output"></div>
+<div id="notes"></div>
 
-<script src="script.js"></script>
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
+  authDomain: "starnote-52dab.firebaseapp.com",
+  projectId: "starnote-52dab",
+  storageBucket: "starnote-52dab.firebasestorage.app",
+  messagingSenderId: "701812553416",
+  appId: "1:701812553416:web:328c463b159a5d788617fd"
+};
+
+// Init Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// حفظ ملاحظة
+function saveNote() {
+    let text = document.getElementById("note").value;
+
+    if (text === "") {
+        alert("اكتب شي أولاً!");
+        return;
+    }
+
+    db.collection("notes").add({
+        text: text,
+        time: new Date()
+    });
+
+    document.getElementById("note").value = "";
+}
+
+// عرض الملاحظات مباشرة
+db.collection("notes").orderBy("time", "desc")
+.onSnapshot(snapshot => {
+    let notesDiv = document.getElementById("notes");
+    notesDiv.innerHTML = "";
+
+    snapshot.forEach(doc => {
+        let data = doc.data();
+        notesDiv.innerHTML += `
+            <div class="note">🌟 ${data.text}</div>
+        `;
+    });
+});
+</script>
 
 </body>
 </html>
