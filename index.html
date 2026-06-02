@@ -5,67 +5,89 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StarNote 🌌</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
+/* 🌌 خلفية فضاء متحرك */
 body {
     margin: 0;
     font-family: Arial;
-    background: radial-gradient(circle at top, #000010, #000000);
     color: white;
-    text-align: center;
     overflow: hidden;
+    background: black;
 }
 
-h1 {
+/* نجوم الخلفية */
+.stars-bg {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.star-bg {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: moveStars linear infinite;
+}
+
+@keyframes moveStars {
+    from { transform: translateY(0); }
+    to { transform: translateY(100vh); }
+}
+
+/* 🌌 واجهة */
+.container {
+    text-align: center;
     margin-top: 20px;
-    color: gold;
-    text-shadow: 0 0 10px gold;
 }
 
+/* ✨ بوكس زجاجي */
 textarea {
     width: 80%;
     height: 100px;
-    margin-top: 10px;
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 15px;
     border: none;
+    padding: 15px;
+    outline: none;
+    font-size: 16px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    backdrop-filter: blur(10px);
 }
 
 button {
     margin-top: 10px;
-    padding: 10px 20px;
+    padding: 10px 25px;
     border: none;
+    border-radius: 10px;
     background: gold;
-    color: black;
     font-weight: bold;
-    border-radius: 8px;
     cursor: pointer;
 }
 
-/* 🌟 النجوم */
+/* ⭐ نجوم الرسائل */
 .star {
-    display: inline-block;
-    font-size: 28px;
-    margin: 10px;
+    position: absolute;
+    font-size: 24px;
     cursor: pointer;
-    animation: float 6s infinite ease-in-out;
-    transition: transform 0.3s;
+    animation: floatStar 6s infinite ease-in-out;
 }
 
-.star:hover {
-    transform: scale(1.4);
-}
-
-@keyframes float {
-    0% { transform: translateY(0px); }
+@keyframes floatStar {
+    0% { transform: translateY(0); }
     50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
+    100% { transform: translateY(0); }
 }
 
-/* 🌌 popup */
+/* 💫 نافذة العرض */
 .popup {
     display: none;
     position: fixed;
@@ -73,42 +95,52 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.8);
 }
 
 .popup-content {
-    background: #111;
-    color: white;
+    background: rgba(20,20,20,0.9);
     padding: 20px;
-    margin: 25% auto;
     width: 80%;
-    border-radius: 10px;
+    margin: 30% auto;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
 }
 </style>
 </head>
 
 <body>
 
-<h1>⭐ StarNote</h1>
-<p>اكتب رسالة وخليها نجمة بالفضاء 🌌</p>
+<div class="stars-bg" id="bg"></div>
 
-<textarea id="note"></textarea><br>
-<button onclick="saveNote()">إرسال</button>
+<div class="container">
+    <h1>⭐ StarNote</h1>
+    <textarea id="note" placeholder="اكتب ملاحظتك..."></textarea><br>
+    <button onclick="saveNote()">إرسال</button>
+</div>
 
 <div id="stars"></div>
 
-<!-- Popup -->
 <div id="popup" class="popup">
     <div class="popup-content">
         <p id="popupText"></p>
-        <small id="popupTime"></small>
-        <br><br>
+        <small id="popupTime"></small><br><br>
         <button onclick="closePopup()">إغلاق</button>
     </div>
 </div>
 
 <script>
-// 🔥 Firebase config
+// 🌌 خلفية نجوم متحركة
+for (let i = 0; i < 80; i++) {
+    let s = document.createElement("div");
+    s.className = "star-bg";
+    s.style.left = Math.random()*100 + "%";
+    s.style.top = Math.random()*100 + "%";
+    s.style.animationDuration = (5 + Math.random()*10) + "s";
+    document.getElementById("bg").appendChild(s);
+}
+
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -118,15 +150,13 @@ const firebaseConfig = {
   appId: "1:701812553416:web:328c463b159a5d788617fd"
 };
 
-// init
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 💾 حفظ الرسالة
+// حفظ
 function saveNote() {
     let text = document.getElementById("note").value;
-
-    if (text === "") return alert("اكتب رسالة!");
+    if (!text) return;
 
     db.collection("notes").add({
         text: text,
@@ -136,8 +166,8 @@ function saveNote() {
     document.getElementById("note").value = "";
 }
 
-// 🌌 عرض النجوم
-db.collection("notes").orderBy("time", "desc")
+// عرض النجوم بشكل عشوائي بالفضاء
+db.collection("notes").orderBy("time","desc")
 .onSnapshot(snapshot => {
     let box = document.getElementById("stars");
     box.innerHTML = "";
@@ -145,23 +175,27 @@ db.collection("notes").orderBy("time", "desc")
     snapshot.forEach(doc => {
         let data = doc.data();
 
-        box.innerHTML += `
-            <div class="star" onclick="openStar('${data.text}','${data.time}')">
-                ⭐
-            </div>
-        `;
+        let star = document.createElement("div");
+        star.className = "star";
+
+        star.style.left = Math.random()*90 + "%";
+        star.style.top = Math.random()*80 + "%";
+
+        star.innerHTML = "⭐";
+
+        star.onclick = () => openStar(data.text, data.time);
+
+        box.appendChild(star);
     });
 });
-
-// 👆 فتح النجمة
-function openStar(text, time) {
+    // popup
+function openStar(text, time){
     document.getElementById("popup").style.display = "block";
     document.getElementById("popupText").innerText = "⭐ " + text;
     document.getElementById("popupTime").innerText = "📅 " + time;
 }
 
-// ❌ إغلاق
-function closePopup() {
+function closePopup(){
     document.getElementById("popup").style.display = "none";
 }
 </script>
