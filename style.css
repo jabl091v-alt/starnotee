@@ -22,7 +22,7 @@ canvas{
 }
 
 textarea{
-  width:210px;
+  width:220px;
   height:45px;
   padding:10px;
   border-radius:12px;
@@ -39,9 +39,9 @@ button{
   border-radius:10px;
   background:gold;
   font-weight:bold;
+  cursor:pointer;
 }
 
-/* popup */
 .popup{
   display:none;
   position:fixed;
