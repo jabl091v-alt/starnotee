@@ -5,59 +5,42 @@ body{
   font-family:Arial;
 }
 
-/* الفضاء */
+/* canvas */
 canvas{
   position:fixed;
   top:0;
   left:0;
 }
 
-/* الواجهة */
+/* UI موبايل احترافي */
 .ui{
   position:fixed;
-  top:20px;
-  width:100%;
-  text-align:center;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:10px;
+  align-items:center;
   z-index:10;
 }
 
-/* بوكس الرسالة */
+/* بوكس أصغر */
 textarea{
-  width:260px;
-  height:50px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,0.2);
-  background:rgba(255,255,255,0.08);
+  width:180px;
+  height:40px;
+  padding:8px;
+  border-radius:10px;
+  border:none;
+  background:rgba(255,255,255,0.1);
   color:white;
   outline:none;
 }
 
 /* زر */
 button{
-  margin-top:5px;
-  padding:8px 16px;
+  padding:10px 14px;
   border:none;
   border-radius:10px;
   background:gold;
-  cursor:pointer;
   font-weight:bold;
-}
-
-/* popup */
-.popup{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.85);
-}
-
-.popup-content{
-  background:#111;
-  padding:20px;
-  margin:20% auto;
-  width:80%;
-  border-radius:12px;
-  color:white;
 }
