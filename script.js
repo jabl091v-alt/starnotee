@@ -1,4 +1,4 @@
-// 🔥 Firebase Config
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -22,20 +22,36 @@ function resize(){
 resize();
 window.onresize = resize;
 
-// ⭐ نجوم = رسائل
+// ⭐ الرسائل
 let stars = [];
 
-// 🎨 رسم النجوم
+// 🧭 Pan (سحب الفضاء)
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+// 🎨 رسم
 function draw(){
   ctx.fillStyle="black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   for(let s of stars){
-    ctx.fillStyle=s.color || "white";
+
+    let x = s.x + offsetX;
+    let y = s.y + offsetY;
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = s.color;
+
+    ctx.fillStyle = s.color;
 
     ctx.beginPath();
-    ctx.arc(s.x,s.y,4,0,Math.PI*2);
+    ctx.arc(x,y,4,0,Math.PI*2);
     ctx.fill();
+
+    ctx.shadowBlur = 0;
   }
 
   requestAnimationFrame(draw);
@@ -47,21 +63,29 @@ function saveNote(){
   let text = document.getElementById("note").value;
   if(!text) return;
 
-  let colors = ["white","cyan","gold","violet","pink"];
+  let colors = [
+    "#ffffff",
+    "#ff8c00",
+    "#00f5ff",
+    "#ffd700",
+    "#a855f7",
+    "#ff4d6d"
+  ];
+
   let color = colors[Math.floor(Math.random()*colors.length)];
 
   db.collection("notes").add({
     text:text,
+    color:color,
     time:new Date().toLocaleString(),
-    x:Math.random()*window.innerWidth,
-    y:Math.random()*window.innerHeight,
-    color:color
+    x:Math.random()*2000 - 1000,
+    y:Math.random()*2000 - 1000
   });
 
   document.getElementById("note").value="";
 }
 
-// 📡 تحميل الرسائل
+// 📡 تحميل
 db.collection("notes").onSnapshot(snap=>{
   stars=[];
   snap.forEach(doc=>{
@@ -69,14 +93,17 @@ db.collection("notes").onSnapshot(snap=>{
   });
 });
 
-// 👆 فتح النجمة
+// 👆 فتح نجمة
 canvas.addEventListener("click",(e)=>{
   let mx=e.clientX;
   let my=e.clientY;
 
   for(let s of stars){
-    let dx=mx-s.x;
-    let dy=my-s.y;
+    let x = s.x + offsetX;
+    let y = s.y + offsetY;
+
+    let dx=mx-x;
+    let dy=my-y;
 
     if(Math.sqrt(dx*dx+dy*dy)<10){
       openPopup(s);
@@ -84,6 +111,32 @@ canvas.addEventListener("click",(e)=>{
   }
 });
 
+// 🟢 Drag start
+canvas.addEventListener("mousedown",(e)=>{
+  isDragging=true;
+  lastX=e.clientX;
+  lastY=e.clientY;
+});
+
+// 🟢 Drag move
+canvas.addEventListener("mousemove",(e)=>{
+  if(!isDragging) return;
+
+  let dx=e.clientX-lastX;
+  let dy=e.clientY-lastY;
+
+  offsetX+=dx;
+  offsetY+=dy;
+
+  lastX=e.clientX;
+  lastY=e.clientY;
+});
+
+// 🟢 Drag end
+canvas.addEventListener("mouseup",()=>isDragging=false);
+canvas.addEventListener("mouseleave",()=>isDragging=false);
+
+// 👇 popup
 function openPopup(s){
   document.getElementById("popup").style.display="block";
   document.getElementById("txt").innerText="⭐ "+s.text;
