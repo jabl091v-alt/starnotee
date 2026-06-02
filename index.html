@@ -5,12 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StarNote 🌌</title>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <style>
 body {
     margin: 0;
     overflow: hidden;
-    background: black;
+    background: radial-gradient(circle at center, #000010, #000000);
     font-family: Arial;
+    color: white;
 }
 
 canvas {
@@ -45,61 +49,142 @@ button {
     border-radius: 10px;
     cursor: pointer;
 }
+
+.popup {
+    display:none;
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.85);
+}
+
+.popup-content {
+    background:#111;
+    padding:20px;
+    margin:20% auto;
+    width:80%;
+    border-radius:15px;
+}
 </style>
 </head>
 
 <body>
 
-<canvas id="c"></canvas>
+<canvas id="space"></canvas>
 
 <div class="ui">
-    <h2 style="color:white">⭐ StarNote Test Galaxy</h2>
-    <textarea placeholder="رسالة تجريبية"></textarea><br>
-    <button>إرسال (تجريبي)</button>
+    <h2>⭐ StarNote</h2>
+    <textarea id="note" placeholder="اكتب رسالتك..."></textarea><br>
+    <button onclick="saveNote()">إرسال</button>
+</div>
+
+<div id="popup" class="popup">
+    <div class="popup-content">
+        <p id="ptext"></p>
+        <small id="ptime"></small><br><br>
+        <button onclick="closeP()">إغلاق</button>
+    </div>
 </div>
 
 <script>
+// 🔥 Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
+  authDomain: "starnote-52dab.firebaseapp.com",
+  projectId: "starnote-52dab",
+  storageBucket: "starnote-52dab.firebasestorage.app",
+  messagingSenderId: "701812553416",
+  appId: "1:701812553416:web:328c463b159a5d788617fd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // canvas
-const c = document.getElementById("c");
-const ctx = c.getContext("2d");
+const canvas = document.getElementById("space");
+const ctx = canvas.getContext("2d");
 
 function resize(){
-    c.width = window.innerWidth;
-    c.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
 resize();
 window.onresize = resize;
 
-// ⭐ نجوم فقط للتجربة
+// ⭐ فقط نجوم رسائل
 let stars = [];
 
-for(let i=0;i<200;i++){
-    stars.push({
-        x: Math.random()*c.width,
-        y: Math.random()*c.height,
-        r: Math.random()*2,
-        v: Math.random()*0.5 + 0.2
-    });
-}
-
-// 🎯 رسم
+// 🎯 رسم النجوم (رسائل فقط)
 function draw(){
-    ctx.fillStyle = "black";
-    ctx.fillRect(0,0,c.width,c.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
     for(let s of stars){
-        s.y += s.v;
-        if(s.y > c.height) s.y = 0;
 
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.arc(s.x, s.y, 4, 0, Math.PI*2);
         ctx.fill();
     }
 
     requestAnimationFrame(draw);
 }
 draw();
+
+// 💾 إرسال الرسالة (FIXED)
+function saveNote(){
+    let text = document.getElementById("note").value;
+    if(!text) return;
+
+    db.collection("notes").add({
+        text:text,
+        time:new Date().toLocaleString(),
+        x: Math.random()*window.innerWidth,
+        y: Math.random()*window.innerHeight
+    });
+
+    document.getElementById("note").value="";
+}
+
+// 🌟 تحميل الرسائل (FIXED مهم)
+db.collection("notes").onSnapshot(snap=>{
+    stars = [];
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        stars.push({
+            x: d.x || Math.random()*window.innerWidth,
+            y: d.y || Math.random()*window.innerHeight,
+            text: d.text,
+            time: d.time
+        });
+    });
+});
+
+// 👆 فتح النجمة
+canvas.addEventListener("click",(e)=>{
+    let mx = e.clientX;
+    let my = e.clientY;
+
+    for(let s of stars){
+        let dx = mx - s.x;
+        let dy = my - s.y;
+
+        if(Math.sqrt(dx*dx+dy*dy) < 10){
+            openStar(s);
+        }
+    }
+});
+
+function openStar(s){
+    document.getElementById("popup").style.display="block";
+    document.getElementById("ptext").innerText="⭐ "+s.text;
+    document.getElementById("ptime").innerText="📅 "+s.time;
+}
+
+function closeP(){
+    document.getElementById("popup").style.display="none";
+}
 </script>
 
 </body>
