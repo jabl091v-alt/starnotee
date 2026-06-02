@@ -9,54 +9,56 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-    font-family: Arial;
-    color: white;
+body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+    font-family:Arial;
+    color:white;
 }
 
-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
 }
 
-.ui {
-    position: fixed;
-    top: 20px;
-    width: 100%;
-    text-align: center;
-    z-index: 10;
+.ui{
+    position:fixed;
+    top:15px;
+    width:100%;
+    text-align:center;
+    z-index:10;
 }
 
-textarea {
-    width: 60%;
-    height: 80px;
-    border-radius: 10px;
-    border: none;
-    padding: 10px;
+textarea{
+    width:60%;
+    height:80px;
+    border-radius:10px;
+    border:none;
+    padding:10px;
 }
 
-button {
-    padding: 10px 20px;
-    margin-top: 5px;
-    background: gold;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
+button{
+    padding:10px 20px;
+    margin-top:5px;
+    background:gold;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
 }
 
-.popup {
+.popup{
     display:none;
     position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
     background:rgba(0,0,0,0.8);
 }
 
-.popup-content {
+.popup-content{
     background:#111;
     padding:20px;
     margin:20% auto;
@@ -73,21 +75,19 @@ button {
 <div class="ui">
     <h2>⭐ StarNote</h2>
     <textarea id="note"></textarea><br>
-    <button onclick="save()">إرسال</button>
+    <button onclick="saveNote()">إرسال</button>
 </div>
 
 <div id="popup" class="popup">
     <div class="popup-content">
         <p id="txt"></p>
         <small id="time"></small><br><br>
-        <button onclick="closeP()">إغلاق</button>
+        <button onclick="closePopup()">إغلاق</button>
     </div>
 </div>
 
 <script>
-// ======================
-// 1. Firebase (CHECK)
-// ======================
+// ================= Firebase =================
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -100,33 +100,28 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ======================
-// 2. Canvas Setup
-// ======================
+// ================= Canvas =================
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
 function resize(){
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
 resize();
 window.onresize = resize;
 
-// ======================
-// 3. Stars (messages only)
-// ======================
+// ================= Stars =================
 let stars = [];
 
-// DRAW LOOP (IMPORTANT)
 function draw(){
-    ctx.fillStyle = "black";
+    ctx.fillStyle="black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     for(let s of stars){
-        ctx.fillStyle = "white";
+        ctx.fillStyle="white";
         ctx.beginPath();
-        ctx.arc(s.x, s.y, 4, 0, Math.PI*2);
+        ctx.arc(s.x,s.y,4,0,Math.PI*2);
         ctx.fill();
     }
 
@@ -134,66 +129,58 @@ function draw(){
 }
 draw();
 
-// ======================
-// 4. SAVE MESSAGE (TESTED)
-// ======================
-function save(){
+// ================= Save =================
+function saveNote(){
     let text = document.getElementById("note").value;
     if(!text) return;
 
     db.collection("notes").add({
-        text: text,
-        time: new Date().toLocaleString(),
-        x: Math.random()*window.innerWidth,
-        y: Math.random()*window.innerHeight
+        text:text,
+        time:new Date().toLocaleString(),
+        x:Math.random()*window.innerWidth,
+        y:Math.random()*window.innerHeight
     });
 
-    document.getElementById("note").value = "";
+    document.getElementById("note").value="";
 }
 
-// ======================
-// 5. LOAD DATA (FIXED)
-// ======================
+// ================= Load =================
 db.collection("notes").onSnapshot(snap=>{
-    stars = [];
-
+    stars=[];
     snap.forEach(doc=>{
-        let d = doc.data();
-
-        // مهم: ضمان ظهور حتى لو Firebase فشل
+        let d=doc.data();
         stars.push({
-            x: d.x ?? Math.random()*window.innerWidth,
-            y: d.y ?? Math.random()*window.innerHeight,
-            text: d.text || "empty",
-            time: d.time || ""
+            x:d.x,
+            y:d.y,
+            text:d.text,
+            time:d.time
         });
     });
 });
 
-// ======================
-// 6. CLICK
-// ======================
+// ================= Click =================
 canvas.addEventListener("click",(e)=>{
-    let mx = e.clientX;
-    let my = e.clientY;
+    let mx=e.clientX;
+    let my=e.clientY;
 
     for(let s of stars){
-        let dx = mx - s.x;
-        let dy = my - s.y;
+        let dx=mx-s.x;
+        let dy=my-s.y;
 
-        if(Math.sqrt(dx*dx+dy*dy) < 10){
-            openStar(s);
+        if(Math.sqrt(dx*dx+dy*dy)<10){
+            openPopup(s);
         }
     }
 });
 
-function openStar(s){
+// ================= Popup =================
+function openPopup(s){
     document.getElementById("popup").style.display="block";
-    document.getElementById("txt").innerText = "⭐ " + s.text;
-    document.getElementById("time").innerText = "📅 " + s.time;
+    document.getElementById("txt").innerText="⭐ "+s.text;
+    document.getElementById("time").innerText="📅 "+s.time;
 }
 
-function closeP(){
+function closePopup(){
     document.getElementById("popup").style.display="none";
 }
 </script>
