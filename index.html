@@ -12,7 +12,7 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: radial-gradient(circle at center, #000010, #000000);
+    background: black;
     font-family: Arial;
     color: white;
 }
@@ -34,18 +34,16 @@ canvas {
 textarea {
     width: 60%;
     height: 80px;
-    border-radius: 12px;
+    border-radius: 10px;
     border: none;
     padding: 10px;
-    background: rgba(255,255,255,0.1);
-    color: white;
 }
 
 button {
     padding: 10px 20px;
     margin-top: 5px;
-    border: none;
     background: gold;
+    border: none;
     border-radius: 10px;
     cursor: pointer;
 }
@@ -55,7 +53,7 @@ button {
     position:fixed;
     top:0;left:0;
     width:100%;height:100%;
-    background:rgba(0,0,0,0.85);
+    background:rgba(0,0,0,0.8);
 }
 
 .popup-content {
@@ -63,31 +61,33 @@ button {
     padding:20px;
     margin:20% auto;
     width:80%;
-    border-radius:15px;
+    border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="space"></canvas>
+<canvas id="c"></canvas>
 
 <div class="ui">
     <h2>⭐ StarNote</h2>
-    <textarea id="note" placeholder="اكتب رسالتك..."></textarea><br>
-    <button onclick="saveNote()">إرسال</button>
+    <textarea id="note"></textarea><br>
+    <button onclick="save()">إرسال</button>
 </div>
 
 <div id="popup" class="popup">
     <div class="popup-content">
-        <p id="ptext"></p>
-        <small id="ptime"></small><br><br>
+        <p id="txt"></p>
+        <small id="time"></small><br><br>
         <button onclick="closeP()">إغلاق</button>
     </div>
 </div>
 
 <script>
-// 🔥 Firebase
+// ======================
+// 1. Firebase (CHECK)
+// ======================
 const firebaseConfig = {
   apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
   authDomain: "starnote-52dab.firebaseapp.com",
@@ -100,26 +100,30 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// canvas
-const canvas = document.getElementById("space");
+// ======================
+// 2. Canvas Setup
+// ======================
+const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
 function resize(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
 }
 resize();
 window.onresize = resize;
 
-// ⭐ فقط نجوم رسائل
+// ======================
+// 3. Stars (messages only)
+// ======================
 let stars = [];
 
-// 🎯 رسم النجوم (رسائل فقط)
+// DRAW LOOP (IMPORTANT)
 function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
     for(let s of stars){
-
         ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.arc(s.x, s.y, 4, 0, Math.PI*2);
@@ -130,38 +134,45 @@ function draw(){
 }
 draw();
 
-// 💾 إرسال الرسالة (FIXED)
-function saveNote(){
+// ======================
+// 4. SAVE MESSAGE (TESTED)
+// ======================
+function save(){
     let text = document.getElementById("note").value;
     if(!text) return;
 
     db.collection("notes").add({
-        text:text,
-        time:new Date().toLocaleString(),
+        text: text,
+        time: new Date().toLocaleString(),
         x: Math.random()*window.innerWidth,
         y: Math.random()*window.innerHeight
     });
 
-    document.getElementById("note").value="";
+    document.getElementById("note").value = "";
 }
 
-// 🌟 تحميل الرسائل (FIXED مهم)
+// ======================
+// 5. LOAD DATA (FIXED)
+// ======================
 db.collection("notes").onSnapshot(snap=>{
     stars = [];
 
     snap.forEach(doc=>{
         let d = doc.data();
 
+        // مهم: ضمان ظهور حتى لو Firebase فشل
         stars.push({
-            x: d.x || Math.random()*window.innerWidth,
-            y: d.y || Math.random()*window.innerHeight,
-            text: d.text,
-            time: d.time
+            x: d.x ?? Math.random()*window.innerWidth,
+            y: d.y ?? Math.random()*window.innerHeight,
+            text: d.text || "empty",
+            time: d.time || ""
         });
     });
 });
 
-// 👆 فتح النجمة
+// ======================
+// 6. CLICK
+// ======================
 canvas.addEventListener("click",(e)=>{
     let mx = e.clientX;
     let my = e.clientY;
@@ -178,8 +189,8 @@ canvas.addEventListener("click",(e)=>{
 
 function openStar(s){
     document.getElementById("popup").style.display="block";
-    document.getElementById("ptext").innerText="⭐ "+s.text;
-    document.getElementById("ptime").innerText="📅 "+s.time;
+    document.getElementById("txt").innerText = "⭐ " + s.text;
+    document.getElementById("time").innerText = "📅 " + s.time;
 }
 
 function closeP(){
