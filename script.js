@@ -25,36 +25,42 @@ window.addEventListener("resize", resize);
 // ⭐ النجوم
 let stars = [];
 
-// 🧭 حركة + زووم خفيف
-let offsetX = 0;
-let offsetY = 0;
-let scale = 1;
+// 🧭 مركز المجرة
+let angle = 0;
 
-let dragging = false;
-let lastX = 0;
-let lastY = 0;
-
-// 🎯 رسم احترافي مرتب
+// 🌊 رسم
 function draw(){
   ctx.fillStyle="black";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
+  let cx = canvas.width/2;
+  let cy = canvas.height/2;
+
+  angle += 0.0003; // دوران خفيف جداً
+
   for(let s of stars){
 
-    // تطبيق zoom + pan
-    let x = (s.x * scale) + offsetX;
-    let y = (s.y * scale) + offsetY;
+    // 🌌 تحويل لمجرة + دوران بسيط
+    let rx = s.x * Math.cos(angle) - s.y * Math.sin(angle);
+    let ry = s.x * Math.sin(angle) + s.y * Math.cos(angle);
 
-    // حجم النجمة ثابت وواضح
-    let size = 5 * scale;
+    let x = cx + rx * 0.25;
+    let y = cy + ry * 0.25;
 
-    ctx.shadowBlur = 20;
+    // 🌊 طفو خفيف (هذا المهم اللي طلبته)
+    let floatX = Math.sin(Date.now()*0.001 + s.seed) * 0.6;
+    let floatY = Math.cos(Date.now()*0.001 + s.seed) * 0.6;
+
+    // ⭐ حجم ناعم
+    let size = 3.5;
+
+    ctx.shadowBlur = 18;
     ctx.shadowColor = s.color || "#fff";
 
     ctx.fillStyle = s.color || "#fff";
 
     ctx.beginPath();
-    ctx.arc(x,y,size,0,Math.PI*2);
+    ctx.arc(x + floatX, y + floatY, size, 0, Math.PI*2);
     ctx.fill();
 
     ctx.shadowBlur = 0;
@@ -64,7 +70,7 @@ function draw(){
 }
 draw();
 
-// 💾 حفظ رسالة (توزيع مرتب أكثر)
+// 💾 حفظ رسالة
 function saveNote(){
   let text = document.getElementById("note").value;
   if(!text) return;
@@ -76,9 +82,10 @@ function saveNote(){
     color: colors[Math.floor(Math.random()*colors.length)],
     time: new Date().toLocaleString(),
 
-    // 🌌 توزيع أوسع حتى ما تتكدس
-    x: (Math.random()-0.5) * 3000,
-    y: (Math.random()-0.5) * 3000
+    x: (Math.random()-0.5)*2000,
+    y: (Math.random()-0.5)*2000,
+
+    seed: Math.random()*1000 // 🌊 مهم للطفو المختلف لكل نجمة
   });
 
   document.getElementById("note").value="";
@@ -97,66 +104,22 @@ canvas.addEventListener("click",(e)=>{
   let mx=e.clientX;
   let my=e.clientY;
 
+  let cx = canvas.width/2;
+  let cy = canvas.height/2;
+
   for(let s of stars){
-    let x = (s.x * scale) + offsetX;
-    let y = (s.y * scale) + offsetY;
 
-    let dx=mx-x;
-    let dy=my-y;
+    let rx = s.x;
+    let ry = s.y;
 
-    if(Math.sqrt(dx*dx+dy*dy)<15){
+    let x = cx + rx * 0.25;
+    let y = cy + ry * 0.25;
+
+    let dx = mx - x;
+    let dy = my - y;
+
+    if(Math.sqrt(dx*dx + dy*dy) < 12){
       alert("⭐ "+s.text+"\n📅 "+s.time);
     }
   }
-});
-
-// 🧭 Drag
-function start(x,y){
-  dragging=true;
-  lastX=x;
-  lastY=y;
-}
-
-function move(x,y){
-  if(!dragging) return;
-
-  offsetX += x-lastX;
-  offsetY += y-lastY;
-
-  lastX=x;
-  lastY=y;
-}
-
-function end(){
-  dragging=false;
-}
-
-// mouse
-canvas.addEventListener("mousedown",e=>start(e.clientX,e.clientY));
-canvas.addEventListener("mousemove",e=>move(e.clientX,e.clientY));
-canvas.addEventListener("mouseup",end);
-canvas.addEventListener("mouseleave",end);
-
-// touch
-canvas.addEventListener("touchstart",e=>{
-  let t=e.touches[0];
-  start(t.clientX,t.clientY);
-},{passive:true});
-
-canvas.addEventListener("touchmove",e=>{
-  let t=e.touches[0];
-  move(t.clientX,t.clientY);
-},{passive:true});
-
-canvas.addEventListener("touchend",end);
-
-// 🔎 زووم (مهم حتى تشوف النجوم بسهولة)
-window.addEventListener("wheel",(e)=>{
-  if(e.deltaY < 0){
-    scale += 0.1;
-  }else{
-    scale -= 0.1;
-  }
-
-  scale = Math.min(Math.max(scale,0.5),2);
 });
