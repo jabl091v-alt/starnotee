@@ -1,11 +1,8 @@
 body{
   margin:0;
   overflow:hidden;
+  background:black;
   font-family:Arial;
-  background:
-    radial-gradient(circle at 20% 20%, #1b1b2f, transparent 40%),
-    radial-gradient(circle at 80% 30%, #111827, transparent 45%),
-    radial-gradient(circle at 50% 80%, #0a0a0a, black);
 }
 
 canvas{
@@ -20,7 +17,7 @@ canvas{
   left:50%;
   transform:translateX(-50%);
   display:flex;
-  gap:8px;
+  gap:10px;
 }
 
 textarea{
