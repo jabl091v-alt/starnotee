@@ -1,56 +1,23 @@
-body{
-  margin:0;
-  overflow:hidden;
-  background:black;
-  font-family:Arial;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarNote</title>
 
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-}
+<link rel="stylesheet" href="style.css">
+</head>
 
-.ui{
-  position:fixed;
-  bottom:15px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:10px;
-}
+<body>
 
-textarea{
-  width:200px;
-  height:45px;
-  border-radius:10px;
-  border:none;
-  padding:8px;
-  background:rgba(255,255,255,0.1);
-  color:white;
-}
+<canvas id="space"></canvas>
 
-button{
-  border:none;
-  border-radius:10px;
-  background:gold;
-  padding:10px;
-  font-weight:bold;
-}
+<div class="ui">
+  <textarea id="note" placeholder="اكتب ذكرى..."></textarea>
+  <button onclick="addStar()">إرسال</button>
+</div>
 
-.popup{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.8);
-}
+<script src="script.js"></script>
 
-.popup-content{
-  background:#111;
-  color:white;
-  padding:20px;
-  margin:25% auto;
-  width:80%;
-  border-radius:10px;
-}
+</body>
+</html>
