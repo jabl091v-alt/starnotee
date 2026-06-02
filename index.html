@@ -1,81 +1,26 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarNote</title>
+<link rel="stylesheet" href="style.css">
+</head>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC5-qUckXUdEtr-MR0DNqvGj50Nwg_4sxI",
-  authDomain: "starnote-c41ba.firebaseapp.com",
-  projectId: "starnote-c41ba",
-  storageBucket: "starnote-c41ba.firebasestorage.app",
-  messagingSenderId: "69065959769",
-  appId: "1:69065959769:web:6288cb4bfbbcb46df30448"
-};
+<body>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+<h1>⭐ StarNote</h1>
+<p>اكتب ملاحظتك وخليها بالفضاء 🚀</p>
 
-const sky = document.getElementById("sky");
-const popup = document.getElementById("popup");
-const btn = document.getElementById("btn");
+<textarea id="note" placeholder="اكتب هنا..."></textarea>
 
-// 🌌 تحميل النجوم من Firebase
-async function loadStars(){
+<br>
 
-  sky.innerHTML = "";
+<button onclick="saveNote()">حفظ</button>
 
-  const snap = await getDocs(collection(db,"stars"));
+<div id="output"></div>
 
-  snap.forEach(doc => {
-    drawStar(doc.data());
-  });
-}
+<script src="script.js"></script>
 
-// ⭐ رسم النجمة
-function drawStar(data){
-
-  const s = document.createElement("div");
-  s.className = "star";
-
-  s.style.left = data.x + "px";
-  s.style.top = data.y + "px";
-
-  s.onclick = () => {
-    popup.style.display = "block";
-    popup.innerHTML = `
-      <h3>${data.name}</h3>
-      <p>${data.message}</p>
-      <small>${data.date}</small>
-      <br><br>
-      <button onclick="popup.style.display='none'">إغلاق</button>
-    `;
-  };
-
-  sky.appendChild(s);
-}
-
-// ➕ إضافة نجمة إلى Firebase
-btn.addEventListener("click", async () => {
-
-  const name = document.getElementById("name").value;
-  const msg = document.getElementById("msg").value;
-
-  if(!name || !msg){
-    alert("اكتب الاسم والذكرى");
-    return;
-  }
-
-  await addDoc(collection(db,"stars"),{
-    name:name,
-    message:msg,
-    date:new Date().toLocaleDateString(),
-    x:Math.random()*window.innerWidth,
-    y:Math.random()*window.innerHeight
-  });
-
-  document.getElementById("name").value = "";
-  document.getElementById("msg").value = "";
-
-  loadStars();
-});
-
-loadStars();
+</body>
+</html>
