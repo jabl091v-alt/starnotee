@@ -5,16 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StarNote 🌌</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
 <style>
 body {
     margin: 0;
     overflow: hidden;
-    background: radial-gradient(circle at center, #000015, #000000);
+    background: black;
     font-family: Arial;
-    color: white;
 }
 
 canvas {
@@ -25,7 +21,7 @@ canvas {
 
 .ui {
     position: fixed;
-    top: 15px;
+    top: 20px;
     width: 100%;
     text-align: center;
     z-index: 10;
@@ -47,181 +43,63 @@ button {
     border: none;
     background: gold;
     border-radius: 10px;
-}
-
-.popup {
-    display:none;
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.85);
-}
-
-.popup-content {
-    background:#111;
-    padding:20px;
-    margin:20% auto;
-    width:80%;
-    border-radius:15px;
+    cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="space"></canvas>
+<canvas id="c"></canvas>
 
 <div class="ui">
-    <h2>⭐ StarNote</h2>
-    <textarea id="note"></textarea><br>
-    <button onclick="saveNote()">إرسال</button>
-</div>
-
-<div id="popup" class="popup">
-    <div class="popup-content">
-        <p id="ptext"></p>
-        <small id="ptime"></small><br><br>
-        <button onclick="closeP()">إغلاق</button>
-    </div>
+    <h2 style="color:white">⭐ StarNote Test Galaxy</h2>
+    <textarea placeholder="رسالة تجريبية"></textarea><br>
+    <button>إرسال (تجريبي)</button>
 </div>
 
 <script>
-// 🔥 Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyC4bSu52LkoUTTOY2_P3q7sQSkrus3NccA",
-  authDomain: "starnote-52dab.firebaseapp.com",
-  projectId: "starnote-52dab",
-  storageBucket: "starnote-52dab.firebasestorage.app",
-  messagingSenderId: "701812553416",
-  appId: "1:701812553416:web:328c463b159a5d788617fd"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
 // canvas
-const canvas = document.getElementById("space");
-const ctx = canvas.getContext("2d");
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
 
 function resize(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
 }
 resize();
 window.onresize = resize;
 
-// camera
-let camera = {x:0,y:0,zoom:1};
-let drag=false,last={x:0,y:0};
-
-// ⭐ النجوم
+// ⭐ نجوم فقط للتجربة
 let stars = [];
 
-// 🎯 رسم مضمون
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<200;i++){
+    stars.push({
+        x: Math.random()*c.width,
+        y: Math.random()*c.height,
+        r: Math.random()*2,
+        v: Math.random()*0.5 + 0.2
+    });
+}
 
+// 🎯 رسم
+function draw(){
     ctx.fillStyle = "black";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillRect(0,0,c.width,c.height);
 
     for(let s of stars){
-
-        let x = (s.x - camera.x) * camera.zoom + canvas.width/2;
-        let y = (s.y - camera.y) * camera.zoom + canvas.height/2;
-
-        // فقط ارسم إذا داخل الشاشة (مهم جداً)
-        if(x < -50  x > canvas.width+50  y < -50 || y > canvas.height+50) continue;
+        s.y += s.v;
+        if(s.y > c.height) s.y = 0;
 
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI*2);
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
         ctx.fill();
     }
 
     requestAnimationFrame(draw);
 }
 draw();
-
-// 💾 حفظ
-function saveNote(){
-    let text = document.getElementById("note").value;
-    if(!text) return;
-
-    db.collection("notes").add({
-        text:text,
-        time:new Date().toLocaleString(),
-        x:(Math.random()-0.5)*2000,
-        y:(Math.random()-0.5)*2000
-    });
-
-    document.getElementById("note").value="";
-}
-
-// 🌟 تحميل
-db.collection("notes").onSnapshot(snap=>{
-    stars = [];
-    snap.forEach(doc=>{
-        stars.push(doc.data());
-    });
-});
-
-// 👆 click
-canvas.addEventListener("click",(e)=>{
-    let mx = e.clientX;
-    let my = e.clientY;
-
-    for(let s of stars){
-        let x = (s.x - camera.x) * camera.zoom + canvas.width/2;
-        let y = (s.y - camera.y) * camera.zoom + canvas.height/2;
-
-        let dx = mx - x;
-        let dy = my - y;
-
-        if(Math.sqrt(dx*dx+dy*dy) < 10){
-            openStar(s);
-        }
-    }
-});
-
-// 🔍 zoom
-canvas.addEventListener("wheel",(e)=>{
-    camera.zoom += e.deltaY * -0.001;
-    camera.zoom = Math.min(Math.max(0.5, camera.zoom), 3);
-});
-
-// 🧭 drag
-canvas.addEventListener("mousedown",(e)=>{
-    drag=true;
-    last.x=e.clientX;
-    last.y=e.
-        clientY;
-});
-
-canvas.addEventListener("mouseup",()=>drag=false);
-
-canvas.addEventListener("mousemove",(e)=>{
-    if(drag){
-        let dx=e.clientX-last.x;
-        let dy=e.clientY-last.y;
-
-        camera.x -= dx / camera.zoom;
-        camera.y -= dy / camera.zoom;
-
-        last.x=e.clientX;
-        last.y=e.clientY;
-    }
-});
-
-// ⭐ popup
-function openStar(s){
-    document.getElementById("popup").style.display="block";
-    document.getElementById("ptext").innerText="⭐ "+s.text;
-    document.getElementById("ptime").innerText="📅 "+s.time;
-}
-
-function closeP(){
-    document.getElementById("popup").style.display="none";
-}
 </script>
 
 </body>
